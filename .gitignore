@@ -1,0 +1,18 @@
+/.lake/
+/.DS_Store
+**/.DS_Store
+
+# Local delivery archives and superseded development snapshots are retained
+# on the author's machine, but are not part of the public verification source.
+/*.zip
+/legacy/
+
+# LaTeX build products; the canonical manuscript and TikZ sources are tracked.
+/manuscript/*.aux
+/manuscript/*.fdb_latexmk
+/manuscript/*.fls
+/manuscript/*.log
+/manuscript/*.out
+
+# Local comparison extracts and verification logs.
+/tmp/

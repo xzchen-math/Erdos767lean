@@ -1,0 +1,54 @@
+name: Lean verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the formalization
+        uses: actions/checkout@v4
+
+      - name: Check packaged file integrity
+        run: sha256sum -c SHA256SUMS
+
+      - name: Build with the pinned Lean toolchain
+        uses: leanprover/lean-action@v1
+        with:
+          build: true
+          test: false
+
+      - name: Reject project proof placeholders and global axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --include='*.lean' \
+            '(^|[^[:alnum:]_])(sorry|admit|bv_decide)([^[:alnum:]_]|$)' \
+            Erdos767 Erdos767.lean; then
+            echo 'Forbidden proof placeholder or compiler-reflection tactic found.'
+            exit 1
+          fi
+          if grep -RInE --include='*.lean' \
+            '^[[:space:]]*axiom([[:space:]]|$)' \
+            Erdos767 Erdos767.lean; then
+            echo 'Project-declared global axiom found.'
+            exit 1
+          fi
+
+      - name: Check the three chapter entry points
+        run: >-
+          lake build
+          Erdos767.Chapter3All
+          Erdos767.Chapter4All
+          Erdos767.Chapter5All
+
+      - name: Print the trusted assumptions of the main results
+        run: lake env lean Erdos767/Audit.lean
